@@ -1,0 +1,14 @@
+langchain
+langgraph
+langchain-core
+langchain-community
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+langchain-openai
+pytest
+black
+flake8
+mypy
