@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class VideoAgent(BaseAgent):
@@ -8,9 +9,27 @@ class VideoAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="VideoAgent",
-            description="用于识别和分析视频内容的Agent"
+            description="用于识别和分析视频内容的Agent",
+            agent_id="video_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="analyze_video",
+                description="分析旅游视频内容",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "video_url": {"type": "string"}
+                    },
+                    "required": ["video_url"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=15
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["video_url"]

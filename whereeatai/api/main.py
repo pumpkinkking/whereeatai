@@ -1,28 +1,82 @@
 """API服务主入口"""
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
+from datetime import datetime
+import logging
+
 from whereeatai.agents.agent_manager import AgentManager
+from whereeatai.config import (
+    PROJECT_NAME, 
+    VERSION, 
+    DESCRIPTION, 
+    ENVIRONMENT,
+    ALLOWED_HOSTS,
+    RATE_LIMIT_CALLS,
+    RATE_LIMIT_PERIOD
+)
+from whereeatai.middleware.request_middleware import (
+    RequestLoggingMiddleware,
+    RateLimitMiddleware
+)
+
+logger = logging.getLogger(__name__)
 
 # 创建Agent管理器实例
-agent_manager = AgentManager()
+try:
+    agent_manager = AgentManager()
+    logger.info("Agent管理器初始化成功")
+except Exception as e:
+    logger.error(f"Agent管理器初始化失败: {str(e)}")
+    raise
 
 # 创建FastAPI应用
 app = FastAPI(
-    title="WhereEatAI API",
-    description="智能旅行规划与美食推荐API，基于多Agent协作",
-    version="1.0.0"
+    title=f"{PROJECT_NAME} API",
+    description=DESCRIPTION,
+    version=VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_HOSTS if ALLOWED_HOSTS != ["*"] else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 添加请求日志中间件
+app.add_middleware(RequestLoggingMiddleware)
+
+# 添加限流中间件
+app.add_middleware(
+    RateLimitMiddleware,
+    calls=RATE_LIMIT_CALLS,
+    period=RATE_LIMIT_PERIOD
+)
+
+logger.info(f"FastAPI应用初始化完成 - 环境: {ENVIRONMENT}")
+
+
+# 全局异常处理器
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """全局异常处理"""
+    logger.error(f"未处理的异常: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": "服务器内部错误" if ENVIRONMENT == "production" else str(exc),
+            "timestamp": datetime.now().isoformat()
+        }
+    )
 
 
 # 请求模型
@@ -50,9 +104,11 @@ class TravelResponse(BaseModel):
 async def root():
     """根路径"""
     return {
-        "message": "Welcome to WhereEatAI API",
-        "version": "1.0.0",
-        "docs": "/docs"
+        "message": f"Welcome to {PROJECT_NAME} API",
+        "version": VERSION,
+        "environment": ENVIRONMENT,
+        "docs": "/docs",
+        "health": "/status"
     }
 
 
@@ -61,7 +117,10 @@ async def status():
     """获取服务状态"""
     return {
         "status": "running",
-        "message": "WhereEatAI API is running normally"
+        "message": f"{PROJECT_NAME} API is running normally",
+        "version": VERSION,
+        "environment": ENVIRONMENT,
+        "timestamp": datetime.now().isoformat()
     }
 
 

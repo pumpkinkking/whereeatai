@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class TravelPlanAgent(BaseAgent):
@@ -8,9 +9,29 @@ class TravelPlanAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="TravelPlanAgent",
-            description="用于生成完整旅行计划的Agent，包括美食、酒店、路线等"
+            description="用于生成完整旅行计划的Agent，包括美食、酒店、路线等",
+            agent_id="travel_plan_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="generate_travel_plan",
+                description="生成包含美食、酒店、路线的完整旅行计划",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "destination": {"type": "string"},
+                        "duration": {"type": "string"},
+                        "interests": {"type": "array"}
+                    },
+                    "required": ["destination", "duration", "interests"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=25
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["destination", "duration", "interests"]

@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class FoodRecommendationAgent(BaseAgent):
@@ -8,9 +9,35 @@ class FoodRecommendationAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="FoodRecommendationAgent",
-            description="用于推荐附近美食的Agent"
+            description="用于推荐附近美食的Agent",
+            agent_id="food_recommendation_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        """获取Agent能力列表"""
+        return [
+            AgentCapability(
+                name="recommend_restaurants",
+                description="根据位置、菜系和预算推荐附近餐厅",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "location": {"type": "string"},
+                        "cuisine_type": {"type": "string"},
+                        "budget": {"type": "string"}
+                    },
+                    "required": ["location", "cuisine_type"]
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "recommendations": {"type": "string"}
+                    }
+                },
+                estimated_duration=15
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["location", "cuisine_type"]

@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class ItineraryAgent(BaseAgent):
@@ -8,9 +9,29 @@ class ItineraryAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="ItineraryAgent",
-            description="用于生成动态行程的Agent"
+            description="用于生成动态行程的Agent",
+            agent_id="itinerary_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="plan_itinerary",
+                description="生成详细的动态行程规划",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "destination": {"type": "string"},
+                        "duration": {"type": "string"},
+                        "interests": {"type": "array"}
+                    },
+                    "required": ["destination", "duration", "interests"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=18
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["destination", "duration", "interests"]

@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class XiaoHongShuAgent(BaseAgent):
@@ -8,9 +9,27 @@ class XiaoHongShuAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="XiaoHongShuAgent",
-            description="用于识别和分析小红书笔记内容的Agent"
+            description="用于识别和分析小红书笔记内容的Agent",
+            agent_id="xiaohongshu_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="analyze_xiaohongshu",
+                description="分析小红书笔记内容提取旅游信息",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "note_content": {"type": "string"}
+                    },
+                    "required": ["note_content"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=10
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["note_content"]

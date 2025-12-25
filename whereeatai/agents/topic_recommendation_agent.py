@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class TopicRecommendationAgent(BaseAgent):
@@ -8,9 +9,28 @@ class TopicRecommendationAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="TopicRecommendationAgent",
-            description="用于生成专题推荐的Agent"
+            description="用于生成专题推荐的Agent",
+            agent_id="topic_recommendation_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="recommend_topics",
+                description="基于主题和兴趣生成专题推荐",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "topic": {"type": "string"},
+                        "interests": {"type": "array"}
+                    },
+                    "required": ["topic", "interests"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=12
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["topic", "interests"]

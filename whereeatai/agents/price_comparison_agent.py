@@ -1,6 +1,7 @@
 from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class PriceComparisonAgent(BaseAgent):
@@ -8,9 +9,28 @@ class PriceComparisonAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="PriceComparisonAgent",
-            description="用于多平台价格比价的Agent"
+            description="用于多平台价格比价的Agent",
+            agent_id="price_comparison_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        return [
+            AgentCapability(
+                name="compare_prices",
+                description="跨平台比较产品价格",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "product": {"type": "string"},
+                        "platforms": {"type": "array"}
+                    },
+                    "required": ["product", "platforms"]
+                },
+                output_schema={"type": "object"},
+                estimated_duration=12
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = ["product", "platforms"]

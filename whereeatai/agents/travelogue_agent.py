@@ -1,7 +1,8 @@
 """游记生成Agent"""
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 from ..models.qwen_model import QwenModel
+from ..protocols.a2a_protocol import AgentCapability
 
 
 class TravelogueAgent(BaseAgent):
@@ -11,9 +12,35 @@ class TravelogueAgent(BaseAgent):
         """初始化游记生成Agent"""
         super().__init__(
             name="TravelogueAgent",
-            description="用于生成智能游记的Agent"
+            description="用于生成智能游记的Agent",
+            agent_id="travelogue_agent"
         )
         self.model = QwenModel()
+    
+    def get_capabilities(self) -> List[AgentCapability]:
+        """获取Agent能力列表"""
+        return [
+            AgentCapability(
+                name="generate_travelogue",
+                description="基于目的地、时长和兴趣生成个性化游记",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "destination": {"type": "string"},
+                        "duration": {"type": "string"},
+                        "interests": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["destination", "duration", "interests"]
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "travelogue": {"type": "string"}
+                    }
+                },
+                estimated_duration=20
+            )
+        ]
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
